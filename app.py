@@ -8,7 +8,7 @@ app = Flask(__name__)
 swe.set_sid_mode(swe.SIDM_LAHIRI)
 flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
 
-ORB = 0.30
+ORB = 0.15
 
 planets = {
     "Sun": swe.SUN,
@@ -141,3 +141,4 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
