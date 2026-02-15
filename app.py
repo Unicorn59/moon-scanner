@@ -8,7 +8,7 @@ app = Flask(__name__)
 swe.set_sid_mode(swe.SIDM_LAHIRI)
 flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
 
-ORB = 0.30
+ORB = 0.15
 
 planets = {
     "Sun": swe.SUN,
@@ -24,12 +24,14 @@ planets = {
 }
 
 aspects = {
-    0: "Conjunction",
-    45: "Semi-Square",
-    60: "Sextile",
-    90: "Square",
-    120: "Trine",
-    180: "Opposition"
+    0: "Conjunction 0",
+    30: "Semi-Sextile 30",
+    45: "Semi-Square 45",
+    60: "Sextile 60",
+    90: "Square 90",
+    120: "Trine 120",
+    150: "Quincunx 150",
+    180: "Opposition 180"
 }
 
 def angle_diff(a, b):
@@ -105,5 +107,6 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
