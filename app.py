@@ -8,7 +8,7 @@ app = Flask(__name__)
 swe.set_sid_mode(swe.SIDM_LAHIRI)
 flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
 
-ORB = 0.15
+ORB = 0.30
 
 planets = {
     "Sun": swe.SUN,
@@ -40,7 +40,7 @@ def angle_diff(a, b):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    result = []
+    results = []
 
     if request.method == "POST":
         date_input = request.form["date"]
@@ -54,6 +54,7 @@ def home():
         end_time   = datetime.datetime(year, month, day, 15, 30)
 
         current_time = start_time
+        active_aspects = {}
 
         while current_time <= end_time:
 
@@ -74,10 +75,22 @@ def home():
                 diff = angle_diff(moon_deg, planet_deg)
 
                 for deg, aname in aspects.items():
+
+                    key = (pname, aname)
+
                     if abs(diff - deg) <= ORB:
-                        result.append(
-                            f"{current_time.strftime('%H:%M')} — Moon {aname} {pname}"
-                        )
+
+                        if key not in active_aspects:
+                            active_aspects[key] = current_time
+
+                    else:
+                        if key in active_aspects:
+                            results.append(
+                                f"{aname} | Moon vs {pname} | "
+                                f"{active_aspects[key].strftime('%H:%M')} - "
+                                f"{current_time.strftime('%H:%M')}"
+                            )
+                            del active_aspects[key]
 
                 # KETU
                 if pname == "Rahu":
@@ -85,12 +98,29 @@ def home():
                     diff_ketu = angle_diff(moon_deg, ketu_deg)
 
                     for deg, aname in aspects.items():
+                        key = ("Ketu", aname)
+
                         if abs(diff_ketu - deg) <= ORB:
-                            result.append(
-                                f"{current_time.strftime('%H:%M')} — Moon {aname} Ketu"
-                            )
+                            if key not in active_aspects:
+                                active_aspects[key] = current_time
+                        else:
+                            if key in active_aspects:
+                                results.append(
+                                    f"{aname} | Moon vs Ketu | "
+                                    f"{active_aspects[key].strftime('%H:%M')} - "
+                                    f"{current_time.strftime('%H:%M')}"
+                                )
+                                del active_aspects[key]
 
             current_time += datetime.timedelta(minutes=1)
+
+        for key, start_event in active_aspects.items():
+            pname, aname = key
+            results.append(
+                f"{aname} | Moon vs {pname} | "
+                f"{start_event.strftime('%H:%M')} - "
+                f"{end_time.strftime('%H:%M')}"
+            )
 
     return render_template_string("""
     <h2>🌙 Moon Intraday Aspect Scanner</h2>
@@ -99,14 +129,15 @@ def home():
         <button type="submit">Scan</button>
     </form>
     <hr>
-    {% for r in result %}
-        <p>{{ r }}</p>
-    {% endfor %}
-    """, result=result)
+    {% if results %}
+        {% for r in results %}
+            <p>{{ r }}</p>
+        {% endfor %}
+    {% else %}
+        <p>No intraday aspects found.</p>
+    {% endif %}
+    """, results=results)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-
-
-
